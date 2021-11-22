@@ -63,7 +63,7 @@ ifeq ($(VERBOSE), 1)
 ISVERBOSE:=verbose
 BANNER:=$(shell printf "\# \e[1;37m-- ~ \e[1;37m\e[4m")
 BANEND:=$(shell printf "\e[0m\e[1;37m ~ --\e[0m")
-RECIPETAIL:=\n
+RECIPETAIL:=echo
 else
 ISVERBOSE:=
 BANNER:=$(shell printf " \e[36m\e[1m⚡\e[0m ")

@@ -157,6 +157,7 @@ do_make()
 do_make
 
 [ "$RULE" = "clean" ] && exit 0 || true
+[ "$RULE" = "info" ] && exit 0 || true
 [ "$BUILD_ONLY" = "1" ] && exit 0 || true
 
 # ---- If we're building the executable (TARGET_FILE0), then run it

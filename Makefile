@@ -41,25 +41,26 @@ gcmdir:
 gcm.cache$(STDHDR_DIR)/%.gcm: $(STDHDR_DIR)/% | gcmdir
 	@echo -e '$(BANNER)c++-system-header iostream$(BANEND)'
 	$(CXX) -x c++-system-header $(CXXFLAGS_F) iostream
-	@printf '%s' '$(RECIPETAIL)'
+	@$(RECIPETAIL)
 
 $(BUILDDIR)/%.o.d: %.cpp
 	@echo "$(BANNER)deps $<$(BANEND)"
 	mkdir -p $(dir $@)
 	$(CXX) -x c++ $(CXXFLAGS_F) -Mno-modules -MMD -MF $@ $< 1>/dev/null
-	@printf '%s' '$(RECIPETAIL)'
+	@$(RECIPETAIL)
 
 $(BUILDDIR)/%.o: %.cpp
 	@echo "$(BANNER)c++ $<$(BANEND)"
 	mkdir -p $(dir $@)
 	$(CXX) -x c++ $(CXXFLAGS_F) -Mno-modules -MMD -MF $@.d -c $< -o $@
-	@printf '%s' '$(RECIPETAIL)'
+	@$(RECIPETAIL)
 
 $(TARGETDIR)/$(TARGET): $(OBJECTS)
 	@echo "$(BANNER)link $(TARGET)$(BANEND)"
 	mkdir -p $(dir $@)
 	$(CC) -o $@ $^ $(LDFLAGS_F)
-	@printf '%s' '$(RECIPETAIL)'
+	@$(RECIPETAIL)
+
 
 $(BUILDDIR)/deps.makefile.inc: $(DEPFILES)
 	cat $(DEPFILES) > $@
