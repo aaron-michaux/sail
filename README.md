@@ -17,19 +17,7 @@ A personal pedagogical project with the following goals:
 
 ## Build System
 
- * Write a makefile with CFLAGS/etc support
- * My run.sh sets the env and runs make
- 
- 
-    std.regex provides the content of header <regex>
-    std.filesystem provides the content of header <filesystem>
-    std.memory provides the content of header <memory>
-    std.threading provides the contents of headers <atomic>, <condition_variable>, <future>, <mutex>, <shared_mutex>, and <thread>
-    std.core provides everything else in the C++ Standard Library
-
- * Modules and unity builds (??)
-
-# make dep rule
+ * Modules and unity builds (??) Probably a bust
  * Depends on a "scandep" program that:
    + indicates module dependencies (including system headers)
    + shows which files are required to generate a module

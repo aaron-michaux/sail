@@ -170,7 +170,9 @@ if [ "$TARGET_FILE" = "$TARGET_FILE0" ] ; then
     export TF_CPP_MIN_LOG_LEVEL="1"
     export AUTOGRAPH_VERBOSITY="1"
 
-    export MallocNanoZone=0 
+    if [ "$CONFIG" = "asan" ] ; then
+        export MallocNanoZone=0
+    fi
     PRODUCT="$TARGETDIR/$TARGET_FILE"
         
     if [ "$GDB" = "1" ] ; then        
