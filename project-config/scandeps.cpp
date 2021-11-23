@@ -132,10 +132,16 @@ void process_file(string_view filename)
             throw runtime_error(format("attempt to import a module partition '{}' before the module declaration", match.get<2>().to_view()));
          }
 
-         const auto dependency = (is_partition)
-            ? format("{}{}", module_name, match.get<2>().to_view())
-            : match.get<2>().to_string();
-         emit_depends_on_module(dependency); // Depends on this module
+         // Depends on this module
+         if(is_partition) {
+            emit_depends_on_module(format("{}{}", module_name, match.get<2>().to_view()));
+         } else if(is_header_fragment) {
+            // We need to do something special here...
+            emit_depends_on_module(match.get<2>().to_string()); 
+         } else {
+            emit_depends_on_module(match.get<2>().to_string()); 
+         }
+         
          return;
       }
 
