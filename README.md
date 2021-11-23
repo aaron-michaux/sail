@@ -24,3 +24,8 @@ A personal pedagogical project with the following goals:
  * Make later imports the files as raw dependency rules
  * Bonus if it does headers at the same time (pass, resolve, include path)
 
+## Talks to Review
+
+ * Charles Barto CPPCONN 2021 What the pack fmt?
+ * Tina Ulbrich CPPCONN 2021 How to rangify your codexb
+ * Sean Parent ACCU 2021 Better Code: Relationships
