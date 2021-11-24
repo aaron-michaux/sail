@@ -4,11 +4,14 @@
 module;
 
 export module my.mod.foo;
-export module my.mod.foo:bar;
-module foobar;
+//export module my.mod.foo:bar;
+//module foobar;
 
 export import <iostream>;
 import foo:spanish;
+
+export import other.module;
+export import :zap;
 
 #include foo
 #define bar

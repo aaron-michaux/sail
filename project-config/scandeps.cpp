@@ -67,15 +67,17 @@ void process_file(string_view filename)
    // State processing variables
    bool in_global_module_fragment = false;
    bool in_module_purview = false;
-   bool is_module_interface_unit = false;
-   bool is_module_implementation_unit = false;
-   bool is_module_interface_partition = false;
-   bool is_module_implementation_partition = false;
+   bool is_module_export = false;
+   // bool is_module_interface_unit = false;   
+   // bool is_module_implementation_unit = false;
+   // bool is_module_interface_partition = false;
+   // bool is_module_implementation_partition = false;
    bool found_processing_end = false;
 
    string module_name = "";
    vector<string> deps;
-
+   vector<string> export_deps;
+   
    auto emit_depends_on_module = [&] (string dependency) {
       deps.push_back(std::move(dependency));
    };
@@ -106,6 +108,8 @@ void process_file(string_view filename)
          in_global_module_fragment = false;
          in_module_purview = true;
          module_name = match.get<1>().to_string();
+         const auto colon_pos = module_name.find(':');
+         is_module_export = (colon_pos == string::npos);
       }
       
       // Do we have a module implementation (without export)? 
@@ -132,21 +136,18 @@ void process_file(string_view filename)
             throw runtime_error(format("attempt to import a module partition '{}' before the module declaration", match.get<2>().to_view()));
          }
 
-         // Depends on this module
-         if(is_partition) {
-            emit_depends_on_module(format("{}{}", module_name, match.get<2>().to_view()));
-         } else if(is_header_fragment) {
-            // We need to do something special here...
-            emit_depends_on_module(match.get<2>().to_string()); 
-         } else {
-            emit_depends_on_module(match.get<2>().to_string()); 
+         const string dependency = (is_partition)
+            ? format("{}{}", module_name, match.get<2>().to_view())
+            : match.get<2>().to_string();
+         cout << "DEPENDENCY: " << dependency << endl;
+         deps.push_back(dependency);
+         if(is_export_import) {
+            export_deps.push_back(dependency);
          }
-         
-         return;
       }
 
       else {
-         found_processing_end = true; // Don't bother looking further into the file
+         //found_processing_end = true; // Don't bother looking further into the file
       }
    };
    
@@ -158,11 +159,20 @@ void process_file(string_view filename)
       process_line(line, ++lineno);
    }
 
+   // Are we producing a module?
+   if(is_module_export) {
+      cout << format(".PHONY MODULE/{}", module_name) << endl;
+      cout << format("MODULE/{}: {}", module_name, filename);
+      for(const auto& dependency: export_deps)
+         cout << format(" MODULE/{}", dependency);
+      cout << endl;
+   }
+   
    // Output the dependencies
    if(deps.size() > 0) {
-      cout << format("{}:", filename);
+      cout << format("gcm.cache/{}.gcm:", filename);
       for(const auto& dependency: deps) {
-         cout << format(" {}", dependency);
+         cout << format(" gcm.cache/{}.gcm", dependency);
       }
       cout << endl;
    }
