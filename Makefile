@@ -43,7 +43,10 @@ bin/scandeps: project-config/scandeps.cpp
 
 test-scan: bin/scandeps
 	@echo "$(BANNER)test-scan$(BANEND)"
-	$< tests/scandeps/01.vanilla.cpp
+	$< tests/scandeps/01/main.cpp
+	$< tests/scandeps/01/speech.cpp
+	$< tests/scandeps/01/speech_english.cpp
+	$< tests/scandeps/01/speech_spanish.cpp
 	@$(RECIPETAIL)
 
 # Symlink the gcm.cache directory, so that we can
