@@ -8,11 +8,14 @@ TOOLCHAIN_CONFIG?=asan
 STATIC_LIBCPP?=0
 VERBOSE?=0
 LTO?=0
+SCANDEPS?=/usr/local/opt/llvm/bin/clang-scan-deps
 
 # Configure includes
 
 CXX_CONTRIB_INC:=-isystemcontrib/include
 CXXFLAGS:=$(CXXFLAGS) $(CXX_CONTRIB_INC)
+
+SED:=gsed
 
 # -------------------------------------------------------- Check that we're in the correct directory
 # Every shell command is executed in the same invocation
@@ -25,23 +28,6 @@ endif
 # -------------------------------------------------- Include makefile environment and standard rules
 
 include project-config/env.inc.makefile
-
-# gcm.cache/speech.gcm: $(BUILDDIR)/src2/speech.o
-# gcm.cache/speech-english.gcm: $(BUILDDIR)/src2/speech_english.o 
-# gcm.cache/speech-spanish.gcm: $(BUILDDIR)/src2/speech_spanish.o	
-# $(BUILDDIR)/src2/speech.o: gcm.cache/speech-english.gcm gcm.cache/speech-spanish.gcm
-# $(BUILDDIR)/src2/main.o: src2/main.cpp gcm.cache/speech.gcm gcm.cache$(STDHDR_DIR)/iostream.gcm gcm.cache$(STDHDR_DIR)/cstdlib.gcm
-
-# gcm.cache/speech.gcm: $(BUILDDIR)/src2/speech.o
-# $(BUILDDIR)/src2/speech.o: gcm.cache/speech-english.gcm gcm.cache/speech-spanish.gcm
-
-# gcm.cache/speech-english.gcm: $(BUILDDIR)/src2/speech_english.o
-# $(BUILDDIR)/src2/speech_english.o:
-
-# $(BUILDDIR)/src2/main.o: gcm.cache/speech.gcm gcm.cache$(STDHDR_DIR)/iostream.gcm gcm.cache$(STDHDR_DIR)/cstdlib.gcm
-
-# gcm.cache/speech-spanish.gcm: $(BUILDDIR)/src2/speech_spanish.o
-# $(BUILDDIR)/src2/speech_spanish.o:
 
 include $(MODDEP_FILES)
 # include $(DEP_FILES)
@@ -69,6 +55,23 @@ test-scan: bin/scandeps
 	$< tests/scandeps/01/speech_spanish.cpp
 	@$(RECIPETAIL)
 
+test2: $(COMP_DATABASE)
+	@echo "$(BANNER)clang-scan-deps thingy$(BANEND)"
+	$(SCANDEPS) --help
+	$(SCANDEPS) --format=make --mode=preprocess --module-files-dir=gcm.cache -v --compilation-database=$<
+
+
+comp-database: | $(COMP_DATABASE)
+
+$(COMP_DATABASE): $(COMPDBS)
+	@echo '$(BANNER)c++-system-header $<$(BANEND)'
+	mkdir -p "$(dir $@)"
+	echo "[" > $@
+	cat $(COMPDBS) >> $@
+	$(SED) -i '$$d' $@
+	echo "]" >> $@
+
+
 module-deps: $(MODDEP_FILES)
 
 # Symlink the gcm.cache directory, so that we can
@@ -84,25 +87,29 @@ gcm.cache$(STDHDR_DIR)/%.gcm: $(STDHDR_DIR)/% | gcmdir
 	$(CXX) -x c++-system-header $(CXXFLAGS_F) $(notdir $<)
 	@$(RECIPETAIL)
 
-# $(BUILDDIR)/%.o.d: %.cpp
-# 	@echo "$(BANNER)deps $<$(BANEND)"
-# 	mkdir -p $(dir $@)
-# 	$(CXX) -x c++ $(CXXFLAGS_F) -Mno-modules -MMD -MF $@ $< 1>/dev/null
-# 	@$(RECIPETAIL)
-
 $(BUILDDIR)/%.o.m: %.cpp | bin/scandeps
 	@echo "$(BANNER)scandeps $<$(BANEND)"
 	mkdir -p $(dir $@)
-	bin/scandeps $< > $@
+	bin/scandeps $(CXXFLAGS_F) $< > $@
 	@$(RECIPETAIL)
 
-
-$(BUILDDIR)/%.o $(BUILDDIR)/%.o.d: %.cpp | bin/scandeps gcmdir
+$(BUILDDIR)/%.o: %.cpp | bin/scandeps gcmdir
 	@echo "$(BANNER)c++ $<$(BANEND)"
 	mkdir -p $(dir $@)
 	bin/scandeps $< > $@.d2
 	$(CXX) -x c++ $(CXXFLAGS_F) -Mno-modules -MMD -MF $@.d -c $< -o $@
 	@$(RECIPETAIL)
+
+$(BUILDDIR)/%.comp-db.json: %.cpp
+	@echo "$(BANNER)comp-db $<$(BANEND)"
+	mkdir -p $(dir $@)
+	printf "{ \"directory\": \"%s\",\n" "$$(echo "$(CURDIR)" | sed 's,\\,\\\\,g' | sed 's,",\\",g')" > $@
+	printf "  \"file\":      \"%s\",\n" "$$(echo "$<" | sed 's,\\,\\\\,g' | sed 's,",\\",g')" >> $@
+	printf "  \"command\":   \"%s\",\n" "$$(echo "$(CXX) -x c++ $(CXXFLAGS_F) -c $< -o $@" | sed 's,\\,\\\\,g' | sed 's,",\\",g')" >> $@
+	printf "  \"output\":    \"%s\" }\n" "$$(echo "$@" | sed 's,\\,\\\\,g' | sed 's,",\\",g')" >> $@
+	printf ",\n" >> $@
+	@$(RECIPETAIL)
+
 
 $(TARGETDIR)/$(TARGET): $(OBJECTS)
 	@echo "$(BANNER)link $(TARGET)$(BANEND)"

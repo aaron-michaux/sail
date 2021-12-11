@@ -8,8 +8,11 @@ TARGETDIR?=build/$(TOOLCHAIN_NAME)-$(TOOLCHAIN_CONFIG)
 BUILDDIR?=/tmp/build-$(USER)/$(TOOLCHAIN_NAME)-$(TOOLCHAIN_CONFIG)/$(TARGET)
 GCMDIR:=$(BUILDDIR)/gcm.cache
 OBJECTS:=$(addprefix $(BUILDDIR)/, $(patsubst %.cpp, %.o, $(SOURCES)))
+COMPDBS:=$(addprefix $(BUILDDIR)/, $(patsubst %.cpp, %.comp-db.json, $(SOURCES)))
 DEP_FILES:=$(addsuffix .d, $(OBJECTS))
 MODDEP_FILES:=$(addsuffix .m, $(OBJECTS))
+
+COMP_DATABASE:=$(TARGETDIR)/compilation-database.json
 
 # Static libcpp
 ifeq ($(STATIC_LIBCPP), 1)

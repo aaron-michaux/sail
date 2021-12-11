@@ -72,6 +72,7 @@ struct Config
    string_view filename;
    string_view out_basedir;
    string_view moduledir = "gcm.cache";
+   vector<string> include_paths;
 
    bool show_help = false;
    bool has_error = false;
@@ -187,8 +188,8 @@ void process_file(const Config& config)
       // Are we importing a module?
       if(const auto match = ctre::match<"^\\s*(export\\s+)?import\\s+([a-zA-Z0-9_\\.:\"<>]+)\\s*;\\s*$">(line); match) {
          const bool is_export_import = match.get<1>().to_view().size() > 0; // Affects dependencies
-         const bool is_header_fragment = match.get<2>().to_view().at(0) == '<'
-            || match.get<2>().to_view().at(0) == '"';
+         // const bool is_header_fragment = match.get<2>().to_view().at(0) == '<'
+         //    || match.get<2>().to_view().at(0) == '"';
          const bool is_partition = match.get<2>().to_view().at(0) == ':';
          if(is_partition && !in_module_purview) {
             throw runtime_error(format("attempt to import a module partition '{}' before the module declaration", match.get<2>().to_view()));
@@ -288,6 +289,12 @@ Config parse_command_line(int argc, const char* const* argv)
             cerr << "ERROR: must specify the output base after -d!" << endl;
             conf.has_error = true;
          }
+      } else if(arg.starts_with("-isystem")) {
+         conf.include_paths.emplace_back(begin(arg) + 8, end(arg));
+      } else if(arg.starts_with("-I")) {
+         conf.include_paths.emplace_back(begin(arg) + 2, end(arg));
+      } else if(arg.starts_with("-")) {
+         // ignore switch
       } else if(conf.filename.size() == 0) {
          conf.filename = arg;
       } else {
