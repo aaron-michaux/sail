@@ -150,6 +150,9 @@ do_make()
     mkdir -p "$BUILDDIR/gcm.cache"
     ln -s "$BUILDDIR/gcm.cache" "$PPWD/gcm.cache"
 
+    # make bin/scandeps
+    make module-deps
+
     make -j $NPROC $RULE
     RET="$?"
     if [ "$RET" != "0" ] ; then exit $RET ; fi

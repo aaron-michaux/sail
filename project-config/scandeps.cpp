@@ -220,6 +220,12 @@ void process_file(const Config& config)
       }
    }
 
+   auto make_module_name = [&] (string_view module_name) -> string {
+      string out_module = format("{0}/{1}.gcm", moduledir, module_name);
+      for(auto& ch: out_module) if(ch == ':') ch = '-';
+      return out_module;
+   };
+
    auto is_cpp_header = [&] (string_view dep) {
       return dep.size() > 1 && dep.front() == '<'
          && std::find(begin(cpp_headers), end(cpp_headers), dep) != end(cpp_headers);
@@ -227,28 +233,24 @@ void process_file(const Config& config)
    
    auto output_dependency = [&] (auto& os, string_view dep) {
       if(is_cpp_header(dep)) {
-         os << ' ' << moduledir << "/$(CPP_MOD_PATH)/"
+         os << ' ' << moduledir << "$(STDHDR_DIR)/"
             << string_view(begin(dep) + 1, end(dep) - 1) << ".gcm";
       } else {
-         os << ' ' << dep << ".c++m";
+         os << ' ' << make_module_name(dep);
       }
-   };
+   };   
+
+   const string outdep = format("$(BUILDDIR)/{0}", outfile);
    
    // Are we producing a module?
-   if(is_module_export) {      
-      cout << format("{1}.c++m: {0}/{1}.gcm", moduledir, module_name) << endl;
-      cout << format(".PHONY {}.c++m", module_name) << endl;
-      cout << format("{0}/{1}.gcm:| {2}", moduledir, module_name, outfile) << endl;
-      cout << format("{} {}/{}.gcm: {}", outfile, moduledir, module_name, filename);
-      for(const auto& dependency: deps)
-         output_dependency(cout, dependency);
-      cout << endl << endl;
-   } else {
-      cout << format("{}: {}", outfile, filename);
-      for(const auto& dependency: deps)
-         output_dependency(cout, dependency);
-      cout << endl << endl;
+   if(is_module_export) {
+      const auto out_module = make_module_name(module_name);
+      cout << out_module << ": " << outdep << endl;
    }
+   cout << outdep << ':';
+   for(const auto& dependency: deps)
+      output_dependency(cout, dependency);
+   cout << endl << endl;
 }
 
 // ----------------------------------------------------------------------------- show_help

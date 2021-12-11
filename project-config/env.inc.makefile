@@ -8,7 +8,8 @@ TARGETDIR?=build/$(TOOLCHAIN_NAME)-$(TOOLCHAIN_CONFIG)
 BUILDDIR?=/tmp/build-$(USER)/$(TOOLCHAIN_NAME)-$(TOOLCHAIN_CONFIG)/$(TARGET)
 GCMDIR:=$(BUILDDIR)/gcm.cache
 OBJECTS:=$(addprefix $(BUILDDIR)/, $(patsubst %.cpp, %.o, $(SOURCES)))
-DEPFILES:=$(addsuffix .d, $(OBJECTS))
+DEP_FILES:=$(addsuffix .d, $(OBJECTS))
+MODDEP_FILES:=$(addsuffix .m, $(OBJECTS))
 
 # Static libcpp
 ifeq ($(STATIC_LIBCPP), 1)
